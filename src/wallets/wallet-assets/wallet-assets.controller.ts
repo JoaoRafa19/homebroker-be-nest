@@ -2,7 +2,7 @@ import { Controller, Get, Post, Param, Body } from '@nestjs/common';
 import { WalletAssetsService } from './wallet-assets.service';
 
 //Nested endPoints
-// /wallets
+// /wallets/
 //
 @Controller('wallets/:wallet_id/assets')
 export class WalletAssetsController {

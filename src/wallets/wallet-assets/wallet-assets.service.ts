@@ -1,12 +1,12 @@
 import { Injectable } from '@nestjs/common';
-import { PrismaService } from 'src/prisma/prisma/prisma.service';
+import { PrismaService } from '../../prisma/prisma/prisma.service';
 
 @Injectable()
 export class WalletAssetsService {
 	constructor(private prismaService: PrismaService) {}
 
 	all(filter: { wallet_id: string }) {
-		return this.prismaService.wallet.findMany({
+		return this.prismaService.walletAssets.findMany({
 			where: {
 				wallet_id: filter.wallet_id,
 			},
@@ -14,8 +14,8 @@ export class WalletAssetsService {
 				Asset: {
 					select: {
 						id: true,
-						symbol: true,
 						price: true,
+						symbol: true,
 					},
 				},
 			},
@@ -23,11 +23,12 @@ export class WalletAssetsService {
 	}
 
 	create(input: { wallet_id: string; asset_id: string; shares: number }) {
+		const { wallet_id, asset_id, shares } = input;
 		return this.prismaService.walletAssets.create({
 			data: {
-				wallet_id: input.wallet_id,
-				asset_id: input.asset_id,
-				shares: input.shares,
+				wallet_id: wallet_id,
+				asset_id: asset_id,
+				shares: shares,
 			},
 		});
 	}

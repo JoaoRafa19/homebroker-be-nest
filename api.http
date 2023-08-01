@@ -5,9 +5,9 @@ POST http://localhost:3000/assets
 Content-Type: application/json
 
 {
-    "id":"asset1",
-    "symbol":"A1",
-    "price":100.0
+    "id":"asset2",
+    "symbol":"A2",
+    "price":200.0
 }
 
 
@@ -25,4 +25,31 @@ Content-Type: application/json
 
 {
     "id": "joazinhosWallet"
+}
+
+
+###
+GET http://localhost:3000/wallets/joazinhosWallet/assets
+
+###
+POST http://localhost:3000/wallets/joazinhosWallet/assets
+Content-Type: application/json
+
+{
+    "asset_id": "asset2",
+    "shares": 10
+
+}
+
+
+###
+POST http://localhost:3000/orders
+Content-Type: application/json
+
+{
+    "wallet_id": "joaozinhosWallet",
+    "asset_id": "asset2",
+    "shares": 5,
+    "price": 100,
+    "type": "BUY"
 }
