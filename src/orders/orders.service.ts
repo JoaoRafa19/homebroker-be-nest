@@ -1,11 +1,31 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma/prisma.service';
 import { InitTransactionDTO, InputExecuteTransactionDTO } from './orders.dto';
-import { OrderStatus } from '@prisma/client';
+import { OrderStatus, OrderType } from '@prisma/client';
 
 @Injectable()
 export class OrdersService {
 	constructor(private prismaService: PrismaService) {}
+
+	all(filter: { wallet_id: string }) {
+		return this.prismaService.order.findMany({
+			where: {
+				wallet_id: filter.wallet_id,
+			},
+			include: {
+				Transactions: true,
+				Asset: {
+					select: {
+						id: true,
+						symbol: true,
+					},
+				},
+			},
+			orderBy: {
+				updated_at: 'desc',
+			},
+		});
+	}
 
 	initTransaction(input: InitTransactionDTO) {
 		return this.prismaService.order.create({
@@ -22,35 +42,36 @@ export class OrdersService {
 	}
 
 	async executeTransaction(input: InputExecuteTransactionDTO) {
-		this.prismaService.$transaction(async (prisma: PrismaService) => {
-			const order = await prisma.order.findUniqueOrThrow({
-				where: { id: input.order_id },
-			});
+		return this.prismaService.$transaction(
+			async (prisma: PrismaService) => {
+				const order = await prisma.order.findUniqueOrThrow({
+					where: { id: input.order_id },
+				});
 
-			// adicionar a transação em order
-			await prisma.order.update({
-				where: {
-					id: input.order_id,
-				},
-				data: {
-					status: input.status,
-					partial: order.partial - input.negotiated_shared,
-					Transactions: {
-						create: {
-							broker_transaction_id: input.broker_transaction_id,
-							related_investor_id: input.related_investor,
-							shares: input.shares,
-							price: input.price,
+				// adicionar a transação em order
+				await prisma.order.update({
+					where: {
+						id: input.order_id,
+					},
+					data: {
+						status: input.status,
+						partial: order.partial - input.negotiated_shared,
+						Transactions: {
+							create: {
+								broker_transaction_id:
+									input.broker_transaction_id,
+								related_investor_id: input.related_investor,
+								shares: input.shares,
+								price: input.price,
+							},
 						},
 					},
-				},
-			});
-			await this.updateWalletAssets(input, order, prisma);
-		});
-
-		// atualizar o status da ordem OPEN ou CLOSE
-
-		// atualizar o preço do ativo
+				});
+				await this.updateWalletAssets(input, order, prisma);
+				// atualizar o status da ordem OPEN ou CLOSE
+				// atualizar o preço do ativo
+			},
+		);
 	}
 
 	/**
@@ -87,7 +108,10 @@ export class OrdersService {
 						},
 					},
 					data: {
-						shares: wallet_asset.shares + input.negotiated_shared,
+						shares:
+							order.type === OrderType.BUY
+								? wallet_asset.shares + input.negotiated_shared
+								: wallet_asset.shares - input.negotiated_shared,
 					},
 				});
 			} else {

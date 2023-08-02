@@ -1,19 +1,28 @@
-import { Controller, Body, Post } from '@nestjs/common';
+import { Controller, Body, Post, Param, Get } from '@nestjs/common';
 import { OrdersService } from './orders.service';
-import { InitTransactionDTO } from './orders.dto';
+import { InitTransactionDTO, InputExecuteTransactionDTO } from './orders.dto';
 
-@Controller('orders')
+@Controller('wallets/:wallet_id/orders')
 export class OrdersController {
 	constructor(private readonly ordersService: OrdersService) {}
 
-	@Post()
-	initTransaction(@Body() body: InitTransactionDTO) {
-		console.log(body);
-		return this.ordersService.initTransaction(body);
+	@Get()
+	all(@Param('wallet_id') wallet_id: string) {
+		return this.ordersService.all({ wallet_id });
 	}
 
 	@Post()
-	executeTransaction() {
-		this.ordersService.executeTransaction({} as any);
+	initTransaction(
+		@Param('wallet_id') wallet_id: string,
+		@Body() body: Omit<InitTransactionDTO, 'wallet_id'>,
+	) {
+		console.log(body);
+		return this.ordersService.initTransaction({ ...body, wallet_id });
+	}
+
+	@Post('/execute')
+	executeTransaction(@Body() body: InputExecuteTransactionDTO) {
+		console.log(body);
+		return this.ordersService.executeTransaction(body);
 	}
 }

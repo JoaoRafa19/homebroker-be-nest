@@ -43,7 +43,7 @@ Content-Type: application/json
 
 
 ###
-POST http://localhost:3000/orders
+POST http://localhost:3000/wallets/joaozinhosWallet/orders
 Content-Type: application/json
 
 {
